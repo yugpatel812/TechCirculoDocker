@@ -19,6 +19,8 @@ phases:
     commands:
       - echo "Build started on $(date)"
       - echo "Building the project JAR using Maven Wrapper..."
+      # Add execute permissions to the Maven wrapper script
+      - chmod +x mvnw
       - ./mvnw clean package -DskipTests
       - echo "Building the Docker image..."
       # Build the Docker image and tag it with 'latest' and a unique build tag
