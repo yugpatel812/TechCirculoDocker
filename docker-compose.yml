@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:13
+    container_name: tech-circulo-db
+    environment:
+      POSTGRES_DB: techcirculo_db
+      POSTGRES_USER: postgres  # Changed to 'postgres'
+      POSTGRES_PASSWORD: password
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - techcirculo_network
+
+  app:
+    build: .
+    container_name: tech-circulo-app
+    depends_on:
+      - db
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/techcirculo_db
+      SPRING_DATASOURCE_USERNAME: postgres  # Changed to 'postgres'
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    networks:
+      - techcirculo_network
+
+volumes:
+  postgres_data:
+
+networks:
+  techcirculo_network:
+    driver: bridge
