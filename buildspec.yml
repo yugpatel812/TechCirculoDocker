@@ -1,16 +1,10 @@
 version: 0.2
 
-# The 'phases' section defines the build stages and commands
 phases:
-  install:
-    commands:
-      # Install any necessary build tools or dependencies here if needed
-      - echo "No additional tools to install."
 
   pre_build:
     commands:
       - echo "Logging in to Amazon ECR..."
-      # Define the ECR repository URI and repository name
       - REPOSITORY_URI=464011418334.dkr.ecr.ap-south-1.amazonaws.com/tech-circulo-registry
       - REPO_NAME=tech-circulo-registry
       - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin $REPOSITORY_URI
@@ -19,11 +13,9 @@ phases:
     commands:
       - echo "Build started on $(date)"
       - echo "Building the project JAR using Maven Wrapper..."
-      # Add execute permissions to the Maven wrapper script
       - chmod +x mvnw
       - ./mvnw clean package -DskipTests
       - echo "Building the Docker image..."
-      # Build the Docker image and tag it with 'latest' and a unique build tag
       - docker build -t $REPOSITORY_URI:latest .
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
 
@@ -31,18 +23,13 @@ phases:
     commands:
       - echo "Build completed on $(date)"
       - echo "Pushing the Docker images..."
-      # Push both the 'latest' and version-specific tagged images to ECR
       - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
       - echo "Writing image definitions file..."
-      # Create the imagedefinitions.json file for CodeDeploy
-      # The 'name' field must match the container name in your ECS task definition.
       - CONTAINER_NAME="tech-circulo-app"
       - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION > imagedefinitions.json
       - echo "imagedefinitions.json content:"
       - cat imagedefinitions.json
-
-# The 'artifacts' section specifies which files to save after the build
 artifacts:
   files:
     - imagedefinitions.json
